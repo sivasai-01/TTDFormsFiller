@@ -82,7 +82,7 @@ function App() {
     e('input', f('pilgrimCountry')), e('input', f('pilgrimPincode')),
     e('label', null, 'Upload Document', e('input', { type: 'file', style: { display: 'none' }, accept: '.jpeg,.png,.pdf', onChange: onFile })),
     e('span', { id: 'docName' }, doc ? doc.name : ''),
-    e('button', { id: 'cont', disabled: !doc }, 'Continue'));
+    e('button', { id: 'cont', disabled: !doc, onClick: () => { window.__continued = true; } }, 'Continue'));
 }
 ReactDOM.createRoot(document.getElementById('root')).render(e(App));
 </script></body></html>`;
@@ -124,7 +124,8 @@ const PILGRIMS = [
   const state = page => page.evaluate(() => ({
     r0: window.__row0, r1: window.__row1, c: window.__contact,
     doc: window.__doc ? { name: window.__doc.name, size: window.__doc.size, type: window.__doc.type } : null,
-    err: window.__docErr, shown: document.getElementById('docName').textContent, cont: document.getElementById('cont').disabled
+    err: window.__docErr, shown: document.getElementById('docName').textContent, cont: document.getElementById('cont').disabled,
+    continued: window.__continued || false
   }));
   const toastText = page => page.evaluate(() => (document.getElementById('ttdfh-fill-toast') || {}).textContent || '');
 
@@ -132,9 +133,11 @@ const PILGRIMS = [
   await seed({ pilgrims: PILGRIMS, contact, seniorProof: proof });
   let page = await openPld();
   ok(!!(await page.$('#ttdfh-fill-button')), 'the floating Fill button appears');
-  ok(/Fill Senior Citizen/.test(await page.evaluate(() => document.getElementById('ttdfh-pop-title').textContent)), 'and is labelled "Fill Senior Citizen"');
+  ok(/Fill Senior Citizen & Continue/.test(await page.evaluate(() => document.getElementById('ttdfh-pop-title').textContent)), 'and is labelled "Fill Senior Citizen & Continue"');
+  ok(await page.evaluate(() => document.querySelector('#ttdfh-fill-button .ttdfh-icon').textContent === '⏭️'), 'and shows the Fill & Continue icon');
   await page.click('#ttdfh-fill-button');
   await page.waitForFunction(() => window.__doc, null, { timeout: 8000 }).catch(() => {});
+  await page.waitForFunction(() => window.__continued, null, { timeout: 5000 }).catch(() => {});
   let s = await state(page);
   ok(s.r0.name === 'Ramaiah Sastry' && s.r1.name === 'Kamala Sastry', 'both rows reach React state', { r0: s.r0, r1: s.r1 });
   ok(s.r0.idNumber === '999988887777' && s.r1.idNumber === '888877776666' && s.r1.age === '58', 'ID numbers and the spouse\'s age too');
@@ -143,10 +146,19 @@ const PILGRIMS = [
      s.c.pilgrimState === 'Telangana', 'contact block filled, State picked from its dropdown', s.c);
   ok(s.doc && s.doc.name === 'Aadhaar_Synthetic.pdf' && s.doc.size === pdf.length && s.doc.type === 'application/pdf',
      'the age proof reached React\'s onChange (from an isolated world, via the native change event)', s.doc);
-  ok(s.shown === 'Aadhaar_Synthetic.pdf' && s.cont === false, 'the page shows the file name and enables Continue', { shown: s.shown, cont: s.cont });
+  ok(s.shown === 'Aadhaar_Synthetic.pdf' && s.cont === false && s.continued, 'the page shows the file name, enables Continue, and the default button advances', { shown: s.shown, cont: s.cont, continued: s.continued });
   await page.waitForFunction(() => /Age proof|pilgrim/.test((document.getElementById('ttdfh-fill-toast') || {}).textContent || ''), null, { timeout: 5000 }).catch(() => {});
   const t1 = await toastText(page);
   ok(/Only the first 2 pilgrims/.test(t1) && /Age proof attached/.test(t1), 'the toast reports the third pilgrim was left out and the proof attached', t1.slice(0, 300));
+  await page.close();
+
+  G('Alt+A fills and continues on /pld/pilgrim-details');
+  await seed({ pilgrims: PILGRIMS.slice(0, 2), contact, seniorProof: proof });
+  page = await openPld();
+  await page.keyboard.press('Alt+a');
+  await page.waitForFunction(() => window.__continued, null, { timeout: 8000 }).catch(() => {});
+  s = await state(page);
+  ok(s.doc && s.continued, 'Alt+A fills the age proof and presses Continue', { doc: s.doc && s.doc.name, continued: s.continued });
   await page.close();
 
   G('Popup message FILL_SENIOR (as the panel sends it)');

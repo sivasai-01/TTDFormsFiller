@@ -2420,18 +2420,19 @@
       showToast("🙏 Sevak details filled — review, then Save & Add Sevak.", "success");
     }
 
-    // Default action: fill the detected form (pilgrims: only-empty unless overwrite).
+    // Runs the selected fill mode for the currently detected form.
     function onFillClick(opts = {}) {
+      const { overwrite = false, thenContinue = false } = opts;
       const type = detectFormType();
       if (!type) {
         showToast("Open a TTD booking form first.", "warn");
         return;
       }
       runGuarded(() => {
-        if (type === "srivani") return runSrivaniFill();
+        if (type === "srivani") return runSrivaniFill({ thenContinue });
         if (type === "seva") return runSevaFill();
-        if (type === "senior") return runSeniorFill({ overwrite: !!opts.overwrite });
-        return runPilgrimFill({ overwrite: !!opts.overwrite });
+        if (type === "senior") return runSeniorFill({ overwrite, thenContinue });
+        return runPilgrimFill({ overwrite, thenContinue });
       }, { qc: type !== "senior" });
     }
 
@@ -2626,9 +2627,14 @@
     }
 
     function updateLabel(type) {
-      const label = formLabel(type);
+      const supportsContinue = type !== "seva";
+      const label = supportsContinue ? formLabel(type) + " & Continue" : formLabel(type);
       const btn = document.getElementById(BTN_ID);
-      if (btn) btn.setAttribute("aria-label", label + ". Shortcut: " + shortcutFull);
+      if (btn) {
+        btn.setAttribute("aria-label", label + ". Shortcut: " + shortcutFull + " fills without continuing. Right-click or use the ▾ menu for more options.");
+        const icon = btn.querySelector(".ttdfh-icon");
+        if (icon) icon.textContent = supportsContinue ? "⏭️" : "⚡";
+      }
       const title = document.getElementById("ttdfh-pop-title");
       if (title) title.textContent = label;
     }
@@ -2753,10 +2759,12 @@
       const btn = document.createElement("button");
       btn.id = BTN_ID;
       btn.type = "button";
-      btn.setAttribute("aria-label", formLabel(type) + ". Shortcut: " + shortcutFull + ". Right-click or use the ▾ menu for more options.");
+      const supportsContinue = type !== "seva";
+      const label = supportsContinue ? formLabel(type) + " & Continue" : formLabel(type);
+      btn.setAttribute("aria-label", label + ". Shortcut: " + shortcutFull + " fills without continuing. Right-click or use the ▾ menu for more options.");
       btn.setAttribute("aria-haspopup", "menu");
-      btn.innerHTML = '<span class="ttdfh-icon" aria-hidden="true">⚡</span><span class="ttdfh-kbd" aria-hidden="true">' + shortcutLabel + "</span>";
-      btn.addEventListener("click", () => onFillClick());
+      btn.innerHTML = '<span class="ttdfh-icon" aria-hidden="true">' + (supportsContinue ? "⏭️" : "⚡") + '</span><span class="ttdfh-kbd" aria-hidden="true">' + shortcutLabel + "</span>";
+      btn.addEventListener("click", () => onFillClick({ thenContinue: detectFormType() !== "seva" }));
       btn.addEventListener("contextmenu", (e) => {
         e.preventDefault();
         openMenu();
@@ -2797,7 +2805,7 @@
       pop.setAttribute("aria-label", "Fill booking details");
       pop.innerHTML =
         '<div class="ttdfh-pop-title" id="ttdfh-pop-title">' +
-        formLabel(type) +
+        label +
         '</div><div class="ttdfh-pop-kbd-row"><span>Shortcut</span><kbd>' +
         (isMac ? "⌥" : "Alt") +
         "</kbd><kbd>A</kbd></div>";
@@ -2815,11 +2823,11 @@
     }
 
     window.addEventListener("keydown", (e) => {
-      // Alt+A = normal fill (empty rows); Alt+Shift+A = overwrite existing values.
+      // Alt+A fills and continues; Alt+Shift+A overwrites without continuing.
       if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyA") {
         if (!hasBookingForm()) return;
         e.preventDefault();
-        onFillClick({ overwrite: e.shiftKey });
+        onFillClick({ overwrite: e.shiftKey, thenContinue: !e.shiftKey });
       }
     });
 

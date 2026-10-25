@@ -15,8 +15,10 @@ bypasses CAPTCHA / OTP / payment steps, and it never submits a booking by itself
 
 ## The on-page Fill button
 
-The floating **⚡ Fill** button works entirely in the page — no server or network of
-any kind. Key updates:
+The floating **⏭️ Fill & Continue** button works entirely in the page — no server or
+network of any kind. On pilgrim, Senior Citizen and Srivani forms it fills the saved
+details and presses the page's **Continue** button. On Seva forms it fills the sevak
+details for you to review before using **Save & Add Sevak**.
 
 - **Auto-detects the form** — Pilgrim, Sevak (Srivari Seva / Group) or Srivani — and
   fills the right one straight from the button, relabelling itself to match. You no
@@ -37,8 +39,9 @@ any kind. Key updates:
   the next fill or after ~20s.
 - **Options menu & fill modes** — right-click the button (or use the ▾ / long-press) for
   a keyboard-reachable menu: fill only empty rows or overwrite, fill the next empty
-  pilgrim, fill contact only, pick a saved set, choose a group Seva member, fill-and-
-  continue, or undo/clear what was filled. `Alt`+`A` fills; `Alt`+`Shift`+`A` overwrites.
+  pilgrim, fill contact only, pick a saved set, choose a group Seva member, use an
+  explicit fill-and-continue action, or undo/clear what was filled. `Alt`+`A` fills
+  and continues; `Alt`+`Shift`+`A` overwrites without continuing.
 - **Real tab-outs** — after writing a field the extension drives a genuine
   focus → blur, so the site's own validation re-runs and clears any stale "this
   field is required" error instead of leaving Continue disabled.
@@ -93,10 +96,10 @@ Motion is skipped automatically when the browser is set to *reduce motion*.
 ### Prebuilt bundle (easiest — no repo clone needed)
 
 Download the ready-to-load zip for your browser from the repository root and unzip it —
-you'll get a `TTD-Form-Helper-v1.4.6` folder with a `HOW-TO-LOAD.txt` inside:
+you'll get a `TTD-Form-Helper-v1.4.9` folder with a `HOW-TO-LOAD.txt` inside:
 
-- `TTD-Form-Helper-v1.4.6-chrome-edge-brave-opera-unpacked.zip` — Chrome / Edge / Brave / Opera
-- `TTD-Form-Helper-v1.4.6-firefox-unpacked.zip` — Firefox
+- `TTD-Form-Helper-v1.4.9-chrome-edge-brave-opera-unpacked.zip` — Chrome / Edge / Brave / Opera
+- `TTD-Form-Helper-v1.4.9-firefox-unpacked.zip` — Firefox
 
 Then follow the steps below, pointing at the unzipped folder. (These bundles are for
 **loading unpacked**; they are not signed store builds.)
@@ -125,7 +128,7 @@ use the unpacked zip above instead (**Load unpacked**). Rebuild both the zips an
 1. Go to `chrome://extensions` (or `edge://extensions`).
 2. Turn on **Developer mode**.
 3. Click **Load unpacked** and pick this `ttd-form-helper` folder (or the unzipped
-   `TTD-Form-Helper-v1.4.6` folder from the prebuilt bundle).
+   `TTD-Form-Helper-v1.4.9` folder from the prebuilt bundle).
 
 ### Firefox
 
@@ -336,7 +339,20 @@ Hard errors block the Fill; softer notes are shown but let you continue.
 
 ## Version history
 
-### 1.4.7 — current
+### 1.4.9 — current
+
+- **`Alt`+`A` now fills and continues**, matching the floating button's default
+  action. `Alt`+`Shift`+`A` still overwrites without advancing.
+
+### 1.4.8
+
+- **Fill & Continue is now the floating button's default.** On pilgrim, Senior
+  Citizen and Srivani forms, clicking the ⏭️ button fills the saved details and
+  presses Continue. Seva keeps its fill-only action so you can review the details
+  before using Save & Add Sevak. `Alt`+`A` and the menu's fill-only options still
+  fill without advancing.
+
+### 1.4.7
 
 - **Import and export pilgrims and pilgrim sets as CSV.** Settings → Saved
   pilgrims (and Backup & Restore) has Import CSV / Export CSV buttons. The
