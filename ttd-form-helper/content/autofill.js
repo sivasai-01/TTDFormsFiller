@@ -2823,11 +2823,11 @@
     }
 
     window.addEventListener("keydown", (e) => {
-      // Alt+A = normal fill (empty rows); Alt+Shift+A = overwrite existing values.
+      // Alt+A fills and continues; Alt+Shift+A overwrites without continuing.
       if (e.altKey && !e.ctrlKey && !e.metaKey && e.code === "KeyA") {
         if (!hasBookingForm()) return;
         e.preventDefault();
-        onFillClick({ overwrite: e.shiftKey });
+        onFillClick({ overwrite: e.shiftKey, thenContinue: !e.shiftKey });
       }
     });
 

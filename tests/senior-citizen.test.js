@@ -152,6 +152,15 @@ const PILGRIMS = [
   ok(/Only the first 2 pilgrims/.test(t1) && /Age proof attached/.test(t1), 'the toast reports the third pilgrim was left out and the proof attached', t1.slice(0, 300));
   await page.close();
 
+  G('Alt+A fills and continues on /pld/pilgrim-details');
+  await seed({ pilgrims: PILGRIMS.slice(0, 2), contact, seniorProof: proof });
+  page = await openPld();
+  await page.keyboard.press('Alt+a');
+  await page.waitForFunction(() => window.__continued, null, { timeout: 8000 }).catch(() => {});
+  s = await state(page);
+  ok(s.doc && s.continued, 'Alt+A fills the age proof and presses Continue', { doc: s.doc && s.doc.name, continued: s.continued });
+  await page.close();
+
   G('Popup message FILL_SENIOR (as the panel sends it)');
   await seed({ pilgrims: PILGRIMS.slice(0, 2), contact });
   page = await openPld();
